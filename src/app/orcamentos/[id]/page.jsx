@@ -5,27 +5,44 @@ import AppLayout from '@/components/AppLayout';
 import { useOrcamentosStore } from '@/lib/store';
 import { gerarPDFOrcamento } from '@/lib/pdfGenerator';
 import { useToast } from '@/components/Toast';
-import { MdDownload, MdArrowBack, MdDelete, MdPrint, MdEmail, MdCheckCircle } from 'react-icons/md';
+import { 
+  MdDownload, MdArrowBack, MdDelete, MdPrint, MdEmail, 
+  MdCheckCircle, MdContentCopy, MdOutlineRemoveRedEye, 
+  MdOutlineAccessTime, MdInfoOutline, MdHistory, MdShare
+} from 'react-icons/md';
+import { FaWhatsapp } from 'react-icons/fa';
 import Link from 'next/link';
 
 export default function VisualizarOrcamentoPage() {
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
-  const { getOrcamento, deleteOrcamento, updateOrcamento } = useOrcamentosStore();
+  const { getOrcamento, deleteOrcamento, updateOrcamento, syncWithSupabase } = useOrcamentosStore();
   
   const [orcamento, setOrcamento] = useState(null);
 
   useEffect(() => {
+    // 1. Carrega do cache local imediatamente para o usuário não ver tela em branco
     if (params.id) {
-      const data = getOrcamento(params.id);
-      if (data) {
-        setOrcamento(data);
-      } else {
-        toast('Orçamento não encontrado.', 'error');
-        router.push('/orcamentos');
+      const cached = getOrcamento(params.id);
+      if (cached) {
+        setOrcamento(cached);
       }
     }
+
+    // 2. Sincroniza em segundo plano com a nuvem
+    syncWithSupabase().then(() => {
+      if (params.id) {
+        const data = getOrcamento(params.id);
+        if (data) {
+          setOrcamento(data);
+        } else {
+          // Só alerta e redireciona se realmente não existir em nenhuma das fontes
+          toast('Orçamento não encontrado.', 'error');
+          router.push('/orcamentos');
+        }
+      }
+    });
   }, [params.id, getOrcamento, router, toast]);
 
   if (!orcamento) return null;
@@ -40,180 +57,294 @@ export default function VisualizarOrcamentoPage() {
     }
   };
 
-  const handleStatusChange = (novoStatus) => {
-    updateOrcamento(orcamento.id, { status: novoStatus });
+  const handleStatusChange = async (novoStatus) => {
+    await updateOrcamento(orcamento.id, { status: novoStatus });
     setOrcamento({ ...orcamento, status: novoStatus });
     toast(`Status alterado para ${novoStatus}!`, 'info');
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Tem certeza que deseja excluir este orçamento?')) {
-      deleteOrcamento(orcamento.id);
+      await deleteOrcamento(orcamento.id);
       toast('Orçamento excluído.', 'info');
       router.push('/orcamentos');
     }
   };
 
+  const publicLink = typeof window !== 'undefined' ? `${window.location.origin}/proposta/${orcamento.id}` : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(publicLink);
+    toast('Link copiado para a área de transferência!', 'success');
+  };
+
+  const handleWhatsApp = () => {
+    const msg = `Olá ${orcamento.clienteNome || 'Cliente'}, seu orçamento ${orcamento.numero} já está pronto! Acesse o link para conferir a proposta interativa e assinar online: ${publicLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const templateColors = {
+    design: '#2563eb', // Royal Blue
+    saude: '#0d9488', // Teal
+    visual: '#1e293b', // Slate dark
+    digital: '#9333ea', // Purple
+    beauty: '#db2777', // Pink
+    servicos: '#ea580c' // Orange
+  };
+
+  const activeColor = templateColors[orcamento.template || 'design'] || templateColors.design;
+
   return (
     <AppLayout>
-      <div className="page-header">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <Link href="/orcamentos" className="btn btn-secondary btn-sm" style={{ marginBottom: 8 }}>
-            <MdArrowBack /> Voltar para lista
+          <Link href="/orcamentos" className="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-primary-600 mb-2 transition-colors">
+            <MdArrowBack className="mr-1" /> Voltar para a lista
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1>Orçamento {orcamento.numero}</h1>
-            <span className={`badge badge-${orcamento.status}`}>
-              {orcamento.status.charAt(0).toUpperCase() + orcamento.status.slice(1)}
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Orçamento {orcamento.numero}</h1>
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider
+              ${orcamento.status === 'aprovado' ? 'bg-emerald-100 text-emerald-800' : 
+                orcamento.status === 'recusado' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+              {orcamento.status}
             </span>
           </div>
-          <p className="page-subtitle">Criado em {new Date(orcamento.createdAt).toLocaleDateString('pt-BR')} às {new Date(orcamento.createdAt).toLocaleTimeString('pt-BR')}</p>
+          <p className="text-xs text-slate-400 font-medium mt-1">Criado em {new Date(orcamento.createdAt).toLocaleDateString('pt-BR')} às {new Date(orcamento.createdAt).toLocaleTimeString('pt-BR')}</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-danger" onClick={handleDelete}>
+
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button className="btn-secondary py-2 text-red-600 border-red-100 hover:bg-red-50 flex items-center gap-1.5" onClick={handleDelete}>
             <MdDelete /> Excluir
           </button>
-          <button className="btn btn-primary" onClick={handleDownloadPDF}>
+          <Link href={`/orcamentos/novo?clone=${orcamento.id}`} className="btn-secondary py-2 flex items-center gap-1.5">
+            <MdContentCopy /> Duplicar
+          </Link>
+          <button className="btn-primary py-2 flex items-center gap-1.5" onClick={handleDownloadPDF} style={{ background: activeColor, borderColor: activeColor }}>
             <MdDownload /> Baixar PDF
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Visualização dos Dados */}
-          <div className="card">
-            <div className="card-body" style={{ padding: '32px 40px' }}>
-              {/* Header Visual no App */}
-              <div style={{ borderBottom: '2px solid var(--gray-100)', paddingBottom: 20, marginBottom: 24, display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ color: 'var(--primary-600)', marginBottom: 4 }}>WS Solutions Tecnologia</h3>
-                  <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>CNPJ: 12.345.678/0001-90</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <p style={{ fontWeight: 700, fontSize: 16 }}>{orcamento.numero}</p>
-                  <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>Emissão: {new Date(orcamento.createdAt).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </div>
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
+        
+        {/* Left Side: Proposal Doc Mock */}
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-premium p-8 sm:p-12 relative overflow-hidden">
+          
+          <div className="absolute top-0 left-0 w-1.5 h-full" style={{ backgroundColor: activeColor }}></div>
 
-              {/* Cliente e Orçamento Info */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 32 }}>
-                <div>
-                  <h4 style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', marginBottom: 8 }}>Dados do Cliente</h4>
-                  <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{orcamento.clienteNome}</p>
-                  <p style={{ fontSize: 13, color: 'var(--gray-600)' }}>{orcamento.clienteEmail}</p>
-                  <p style={{ fontSize: 13, color: 'var(--gray-600)' }}>{orcamento.clienteTelefone}</p>
-                  <p style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 4 }}>{orcamento.clienteEndereco}</p>
-                </div>
-                <div>
-                  <h4 style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', marginBottom: 8 }}>Validade e Status</h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <p style={{ fontSize: 14 }}><strong>Validade:</strong> {orcamento.validade ? new Date(orcamento.validade).toLocaleDateString('pt-BR') : 'Não informada'}</p>
-                    <p style={{ fontSize: 14 }}><strong>Status Atual:</strong> {orcamento.status}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="flex justify-between items-start mb-8 pb-8 border-b border-slate-100">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">WS Design</h3>
+              <p className="text-xs text-slate-400 font-bold uppercase">marketing@wsdesign.com.br</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-extrabold text-slate-700">{orcamento.numero}</p>
+              <p className="text-xs text-slate-400">Emissão: {new Date(orcamento.createdAt).toLocaleDateString('pt-BR')}</p>
+            </div>
+          </div>
 
-              {/* Tabela de Itens */}
-              <div className="table-wrapper">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Serviço / Produto</th>
-                      <th style={{ textAlign: 'center' }}>Qtd.</th>
-                      <th style={{ textAlign: 'right' }}>Unitário</th>
-                      <th style={{ textAlign: 'right' }}>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orcamento.itens.map((item, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <p style={{ fontWeight: 600 }}>{item.nome}</p>
-                          <p style={{ fontSize: 11, color: 'var(--gray-500)' }}>Unidade: {item.unidade}</p>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>{item.quantidade}</td>
-                        <td style={{ textAlign: 'right' }}>R$ {item.precoUnitario.toFixed(2).replace('.', ',')}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 600 }}>R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+            <div>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dados do Cliente</h4>
+              <p className="text-sm font-bold text-slate-800">{orcamento.clienteNome}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{orcamento.clienteEmail}</p>
+              <p className="text-xs text-slate-500">{orcamento.clienteTelefone}</p>
+              <p className="text-xs text-slate-500 mt-1">{orcamento.clienteEndereco}</p>
+            </div>
+            <div>
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Validade</h4>
+              <p className="text-xs text-slate-600 font-semibold">
+                Validade: {orcamento.validade ? new Date(orcamento.validade).toLocaleDateString('pt-BR') : 'Não informada'}
+              </p>
+            </div>
+          </div>
 
-              {/* Resumo Final */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
-                <div style={{ width: 280, padding: 20, background: 'var(--gray-50)', borderRadius: 'var(--radius-md)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13, color: 'var(--gray-600)' }}>
-                    <span>Subtotal:</span>
-                    <span>R$ {Number(orcamento.subtotal).toFixed(2).replace('.', ',')}</span>
-                  </div>
-                  {orcamento.desconto > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13, color: 'var(--danger)' }}>
-                      <span>Desconto:</span>
-                      <span>- R$ {Number(orcamento.desconto).toFixed(2).replace('.', ',')}</span>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid var(--gray-200)', fontWeight: 700, fontSize: 18 }}>
-                    <span>TOTAL:</span>
-                    <span style={{ color: 'var(--primary-600)' }}>R$ {Number(orcamento.total).toFixed(2).replace('.', ',')}</span>
-                  </div>
-                </div>
-              </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[500px]">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Item</th>
+                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Qtd.</th>
+                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Unitário</th>
+                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {orcamento.itens?.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className="py-4">
+                      <p className="text-sm font-bold text-slate-800">{item.nome}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{item.unidade}</p>
+                    </td>
+                    <td className="py-4 text-sm text-slate-600 text-center">{item.quantidade}</td>
+                    <td className="py-4 text-sm text-slate-600 text-right">R$ {Number(item.precoUnitario).toFixed(2).replace('.', ',')}</td>
+                    <td className="py-4 text-sm font-bold text-slate-800 text-right">R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              {/* Observações */}
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mt-8 pt-8 border-t border-slate-100">
+            <div className="flex-1">
               {orcamento.observacoes && (
-                <div style={{ marginTop: 32, padding: 20, borderLeft: '4px solid var(--warning)', background: '#fffbeb', borderRadius: '0 8px 8px 0' }}>
-                  <h4 style={{ fontSize: 11, color: '#92400e', textTransform: 'uppercase', marginBottom: 8 }}>Observações</h4>
-                  <p style={{ fontSize: 13, color: '#92400e', whiteSpace: 'pre-wrap' }}>{orcamento.observacoes}</p>
+                <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100/60 text-xs text-amber-700 leading-relaxed">
+                  <span className="font-bold block mb-1">Observações</span>
+                  {orcamento.observacoes}
                 </div>
               )}
             </div>
+            <div className="w-full sm:w-64 p-4 rounded-xl bg-slate-50 space-y-2">
+              <div className="flex justify-between text-xs text-slate-500">
+                <span>Subtotal</span><span>R$ {Number(orcamento.subtotal || 0).toFixed(2).replace('.', ',')}</span>
+              </div>
+              {Number(orcamento.desconto || 0) > 0 && (
+                <div className="flex justify-between text-xs font-bold text-red-500">
+                  <span>Desconto</span><span>- R$ {Number(orcamento.desconto).toFixed(2).replace('.', ',')}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-extrabold text-slate-800 pt-2 border-t border-slate-200">
+                <span>Total</span><span style={{ color: activeColor }}>R$ {Number(orcamento.total || 0).toFixed(2).replace('.', ',')}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar de Ações */}
-        <div style={{ position: 'sticky', top: 24 }}>
-          <div className="card">
-            <div className="card-header">
-              <h2 style={{ fontSize: 15, fontWeight: 700 }}>Gerenciar Status</h2>
+        {/* Right Side: Shared Tools, Revisions & Tracking */}
+        <div className="space-y-6">
+          
+          {/* Share & Public Link Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+              <MdShare className="text-lg text-primary-500" /> Link de Envio Online
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2 overflow-hidden">
+                <span className="text-xs text-slate-500 truncate select-all font-mono">{publicLink}</span>
+                <button onClick={handleCopyLink} className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-100 shadow-sm transition-all" title="Copiar Link">
+                  <MdContentCopy className="text-base" />
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleWhatsApp} 
+                  className="flex-1 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold rounded-xl shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all text-xs flex items-center justify-center gap-1.5"
+                >
+                  <FaWhatsapp className="text-base" /> WhatsApp
+                </button>
+                
+                <button 
+                  onClick={handleCopyLink} 
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5"
+                >
+                  <MdContentCopy className="text-base" /> Copiar Link
+                </button>
+              </div>
             </div>
-            <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button 
-                className={`btn btn-full ${orcamento.status === 'aprovado' ? 'btn-success' : 'btn-secondary'}`}
-                onClick={() => handleStatusChange('aprovado')}
-              >
-                <MdCheckCircle /> Marcar como Aprovado
+          </div>
+
+          {/* Quick Status Control */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4">Mudar Status Manual</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => handleStatusChange('aprovado')} className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${orcamento.status === 'aprovado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-50' : ''}`}>
+                <MdCheckCircle className="text-base text-emerald-600" /> Marcar como Aprovado
               </button>
-              <button 
-                className={`btn btn-full ${orcamento.status === 'recusado' ? 'btn-danger' : 'btn-secondary'}`}
-                onClick={() => handleStatusChange('recusado')}
-              >
+              <button onClick={() => handleStatusChange('recusado')} className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${orcamento.status === 'recusado' ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-50' : ''}`}>
                 Marcar como Recusado
               </button>
-              <button 
-                className={`btn btn-full ${orcamento.status === 'cancelado' ? 'btn-secondary' : 'btn-secondary'}`}
-                onClick={() => handleStatusChange('cancelado')}
-              >
-                Cancelar Orçamento
+              <button onClick={() => handleStatusChange('pendente')} className={`btn-secondary text-xs py-2.5 flex items-center justify-center gap-1.5 ${orcamento.status === 'pendente' ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-50' : ''}`}>
+                Marcar como Pendente (Ajustes)
               </button>
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
-            <div className="card-header">
-              <h2 style={{ fontSize: 15, fontWeight: 700 }}>Enviar Orçamento</h2>
+          {/* Tracking & Analytics Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <MdOutlineRemoveRedEye className="text-lg text-primary-500" /> Analytics do Cliente
+            </h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Visualizações</p>
+                <p className="text-2xl font-extrabold text-slate-800">{orcamento.view_count || 0}</p>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center flex flex-col justify-center">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Status Link</p>
+                <span className="text-xs font-bold text-emerald-600">Online</span>
+              </div>
             </div>
-            <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button className="btn btn-secondary btn-full" onClick={() => toast('Função de e-mail não disponível nesta demo.', 'info')}>
-                <MdEmail /> Enviar por E-mail
-              </button>
-              <button className="btn btn-secondary btn-full" onClick={handleDownloadPDF}>
-                <MdPrint /> Imprimir / PDF
-              </button>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-400 font-medium">Primeiro acesso</span>
+                <span className="text-slate-700 font-bold">
+                  {orcamento.first_viewed_at ? new Date(orcamento.first_viewed_at).toLocaleDateString('pt-BR') : '—'}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-50">
+                <span className="text-slate-400 font-medium">Último acesso</span>
+                <span className="text-slate-700 font-bold">
+                  {orcamento.last_viewed_at ? new Date(orcamento.last_viewed_at).toLocaleDateString('pt-BR') : '—'}
+                </span>
+              </div>
+              {orcamento.approved_at && (
+                <>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-400 font-medium">Data Aprovação</span>
+                    <span className="text-slate-700 font-bold">{new Date(orcamento.approved_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-50">
+                    <span className="text-slate-400 font-medium">IP Assinatura</span>
+                    <span className="text-slate-700 font-mono font-bold text-[10px]">{orcamento.approved_ip || '—'}</span>
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Client Signature / Feedback banner */}
+            {orcamento.client_feedback && (
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                <span className="font-extrabold text-slate-700 block mb-1">Feedback do Cliente</span>
+                <p className="text-slate-600 italic">"{orcamento.client_feedback}"</p>
+              </div>
+            )}
           </div>
+
+          {/* Access Logs History */}
+          {orcamento.tracking_history && orcamento.tracking_history.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                <MdHistory className="text-lg text-primary-500" /> Histórico de Eventos
+              </h3>
+
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-1 text-xs">
+                {orcamento.tracking_history.map((log, idx) => (
+                  <div key={idx} className="p-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-100 rounded-xl flex flex-col gap-1 transition-colors">
+                    <div className="flex justify-between font-bold">
+                      <span className="text-slate-700">{log.event || 'Acesso Link'}</span>
+                      <span className="text-slate-400 text-[10px]">
+                        {new Date(log.timestamp).toLocaleDateString('pt-BR')} {new Date(log.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[10px] text-slate-500">
+                      <span>IP: {log.ip}</span>
+                      {log.feedback && <span className="font-medium italic truncate max-w-[150px]">"{log.feedback}"</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
+
       </div>
     </AppLayout>
   );

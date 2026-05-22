@@ -6,8 +6,8 @@ import Providers from '@/components/Providers';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata = {
-  title: 'WS Solutions | Sistema de Orçamentos',
-  description: 'Sistema interno para cadastro de clientes e geração de orçamentos profissionais.',
+  title: 'ORVEN | Sistema de Orçamentos',
+  description: 'Sistema premium para cadastro de clientes e geração de orçamentos profissionais.',
 };
 
 export default function RootLayout({ children }) {

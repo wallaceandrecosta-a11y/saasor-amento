@@ -3,6 +3,7 @@ import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
+import Header from './Header';
 
 export default function AppLayout({ children }) {
   const { user } = useAuthStore();
@@ -19,16 +20,13 @@ export default function AppLayout({ children }) {
     }
   }, [isMounted, user, router]);
 
-  // Durante o SSR e no primeiro render do cliente (antes do useEffect),
-  // renderizamos um shell vazio ou o children sem depender do 'user' do store
-  // para evitar mismatch. Mas como AppLayout protege a rota, se não estamos 
-  // montados ainda, não podemos ter certeza do 'user'.
-  
   if (!isMounted) {
     return (
-      <div className="app-layout" style={{ opacity: 0 }}>
-        <div className="main-content">
-          <div className="page-container">{children}</div>
+      <div className="min-h-screen bg-[#0B0D12] flex opacity-0">
+        <div className="flex-1 flex flex-col ml-64">
+          <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
+            {children}
+          </main>
         </div>
       </div>
     );
@@ -37,10 +35,13 @@ export default function AppLayout({ children }) {
   if (!user) return null;
 
   return (
-    <div className="app-layout">
+    <div className="min-h-screen bg-[#0B0D12] flex">
       <Sidebar />
-      <div className="main-content">
-        <div className="page-container">{children}</div>
+      <div className="flex-1 flex flex-col ml-64 min-h-screen transition-all duration-300">
+        <Header />
+        <main className="flex-1 p-8 max-w-[1400px] w-full mx-auto animate-fade-in">
+          {children}
+        </main>
       </div>
     </div>
   );
