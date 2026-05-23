@@ -47,7 +47,11 @@ export default function AuthModal({ isOpen, onClose, message }) {
 
     try {
       if (mode === 'signup') {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { data, error: signUpError } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+        });
         if (signUpError) throw signUpError;
         if (data?.session) {
           onClose();
@@ -76,7 +80,7 @@ export default function AuthModal({ isOpen, onClose, message }) {
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/dashboard` },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
     } catch (err) {
       setError('Erro ao conectar com Google.');
