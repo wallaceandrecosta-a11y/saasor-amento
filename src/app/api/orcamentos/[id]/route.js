@@ -21,7 +21,7 @@ export async function GET(req, { params }) {
     // 1. Busca o orçamento no banco junto com os dados do emissor (users)
     const { data: orcamento, error } = await supabase
       .from('budgets')
-      .select('*, users(company_name, company_cnpj, company_email, brand_logo_url, brand_color, remove_watermark)')
+      .select('*, users(*)')
       .eq('id', id)
       .single();
 
