@@ -1,6 +1,6 @@
 'use client';
 export const dynamic = 'force-dynamic';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useClientesStore, useServicosStore, useOrcamentosStore } from '@/lib/store';
@@ -56,7 +56,8 @@ const QUICK_OBS_TAGS = [
   { label: 'Entrada: 50/50', text: 'Condição: 50% de entrada e 50% na aprovação técnica.' }
 ];
 
-export default function NovoOrcamentoPage() {
+// COMPONENTE INTERNO: Contém toda a sua lógica que usa o useSearchParams
+function NovoOrcamentoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
@@ -717,17 +718,20 @@ export default function NovoOrcamentoPage() {
               <MdStar className="text-base text-amber-400 animate-bounce" />
               Serviços Frequentes (Mais Usados)
             </h2>
-            <p className="text-xs text-[#8B95A7] mb-4">Adicione serviços recorrentes específicos do seu segmento com apenas 1 clique.</p>
-            <div className="flex flex-wrap gap-2.5">
-              {(NICHOS_PRESETS[activeNicho]?.servicosFrequentes || []).map((item, idx) => (
+
+            <p className="text-xs text-[#8B95A7] mb-5 leading-relaxed">
+              Selecione rapidamente os serviços mais utilizados.
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {(NICHOS_PRESETS[activeNicho]?.servicosFrequentes || []).map((s, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => addFrequentItem(item)}
-                  className="px-3.5 py-2.5 bg-[#050816]/60 hover:bg-primary-500 hover:text-white border border-blue-900/15 rounded-xl text-xs font-extrabold text-slate-300 flex items-center gap-2 transition-all cursor-pointer"
+                  onClick={() => addFrequentItem(s)}
+                  className="px-3 py-2 rounded-xl bg-[#050816]/60 border border-blue-900/15 hover:border-primary-500/40 hover:bg-primary-500/10 text-xs font-bold text-slate-200 transition-all"
                 >
-                  <span className="text-primary-400 font-bold hover:text-white">+</span> {item.nome}
-                  <span className="text-[10px] font-black opacity-75">R$ {item.preco}</span>
+                  {s.nome}
                 </button>
               ))}
             </div>
@@ -1127,23 +1131,11 @@ export default function NovoOrcamentoPage() {
           ) : null}
         </div>
 
-        {/* Right Column: Live Proposal Mockup Preview */}
+ {/* Right Column */}
         <div className="w-full lg:w-[400px] xl:w-[460px] shrink-0">
           <div className="sticky top-24 space-y-6">
-            
+
             <div className="bg-[#071A3D]/40 backdrop-blur-xl border border-blue-900/20 rounded-[24px] shadow-2xl overflow-hidden flex flex-col h-[500px]">
-              {/* Preview Window Header */}
-              <div className="p-4.5 bg-[#050816]/40 border-b border-blue-900/15 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[#8B95A7] text-[10px] font-black uppercase tracking-wider">
-                  <MdOutlineInsertDriveFile className="text-base text-primary-400 animate-pulse" /> Telemetria Preview Ao Vivo
-                </div>
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-                </div>
-              </div>
-              
               {/* Rendered Mockup Paper inside Cockpit screen */}
               <div className="flex-1 p-5 overflow-y-auto bg-[#050816]/65 relative">
                 <div className="absolute inset-0 p-5">
@@ -1201,38 +1193,43 @@ export default function NovoOrcamentoPage() {
                         <p className="text-[7.5px] text-primary-500 font-bold text-center mt-1.5">+ {itens.length - 3} itens adicionais no escopo</p>
                       )}
                     </div>
-
-                    {/* Miniature summary footer */}
-                    <div className="mt-3 pt-2.5 border-t border-slate-100">
-                      <div className="flex justify-between text-[8px] text-slate-500 mb-0.5 font-semibold">
-                        <span>Subtotal</span><span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
-                      </div>
-                      {desconto > 0 && (
-                        <div className="flex justify-between text-[8px] text-red-500 mb-0.5 font-bold">
-                          <span>Desconto</span><span>- R$ {desconto.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-xs font-black text-primary-600 mt-1.5 border-t border-slate-100/50 pt-1.5">
-                        <span>Total Geral</span><span>R$ {total.toFixed(2).replace('.', ',')}</span>
-                      </div>
-                    </div>
-
                   </div>
                 </div>
               </div>
             </div>
 
-            <button 
-              onClick={triggerSophisticatedGeneration} 
+            <button
+              onClick={triggerSophisticatedGeneration}
               className="w-full btn-primary py-4 text-base shadow-glow uppercase tracking-wider flex items-center justify-center gap-2"
             >
               Finalizar e Gerar Proposta
               <MdArrowForward className="text-xl" />
             </button>
+
           </div>
         </div>
 
       </div>
     </AppLayout>
+  );
+}
+
+export default function NovoOrcamentoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#050816]">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full border-4 border-t-primary-500 border-r-primary-500 border-b-blue-900 border-l-blue-900 animate-spin mb-4" />
+
+            <p className="text-sm font-bold text-[#8B95A7] tracking-widest uppercase">
+              Carregando Módulo...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <NovoOrcamentoContent />
+    </Suspense>
   );
 }
