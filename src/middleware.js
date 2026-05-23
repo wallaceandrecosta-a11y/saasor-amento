@@ -67,7 +67,8 @@ export async function middleware(req) {
     'orcamen.to'
   ];
 
-  const isMainDomain = MAIN_DOMAINS.some(domain => hostname.includes(domain));
+  // Adicionamos hostname.endsWith('.vercel.app') para que qualquer domínio do Vercel seja tratado como principal
+  const isMainDomain = MAIN_DOMAINS.some(domain => hostname.includes(domain)) || hostname.endsWith('.vercel.app');
 
   if (!isMainDomain) {
     let tenantKey = '';
