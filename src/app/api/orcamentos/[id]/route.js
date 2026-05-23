@@ -87,6 +87,7 @@ export async function POST(req, { params }) {
     // 1. Busca o orçamento atual
     const { data: orcamento, error: fetchError } = await supabase
       .from('budgets')
+      .select('*')
       .eq('id', id)
       .single();
 
