@@ -139,13 +139,14 @@ export async function POST(req, { params }) {
       .single();
 
     if (updateError) {
-      throw updateError;
+      console.error('UpdateError no Supabase:', updateError);
+      return NextResponse.json({ error: `Erro no banco: ${updateError.message}` }, { status: 400 });
     }
 
     return NextResponse.json(updated);
 
   } catch (error) {
     console.error('Erro ao processar ação no orçamento:', error);
-    return NextResponse.json({ error: 'Erro interno ao processar ação.' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Erro interno ao processar ação.' }, { status: 500 });
   }
 }

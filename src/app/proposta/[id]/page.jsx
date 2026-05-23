@@ -56,7 +56,14 @@ export default function PublicProposalPage() {
         body: JSON.stringify({ action, feedback: finalFeedback })
       });
 
-      if (!res.ok) throw new Error('Erro ao processar sua ação.');
+      if (!res.ok) {
+        let errMsg = 'Erro ao processar sua ação.';
+        try {
+          const errData = await res.json();
+          if (errData.error) errMsg = errData.error;
+        } catch (e) {}
+        throw new Error(errMsg);
+      }
       
       const updated = await res.json();
       setOrcamento(updated);
