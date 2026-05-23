@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import AppLayout from '@/components/AppLayout';
 import { useOrcamentosStore } from '@/lib/store';
-import { gerarPDFOrcamento } from '@/lib/pdfGenerator';
+import { downloadPDFOrcamento, gerarPDFDataURL } from '@/lib/pdfGenerator';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/Toast';
 import { 
   MdDownload, MdArrowBack, MdDelete, MdPrint, MdEmail, 
@@ -20,6 +21,9 @@ export default function VisualizarOrcamentoPage() {
   const { getOrcamento, deleteOrcamento, updateOrcamento, syncWithSupabase } = useOrcamentosStore();
   
   const [orcamento, setOrcamento] = useState(null);
+  const [pdfDataUrl, setPdfDataUrl] = useState('');
+  const [profile, setProfile] = useState(null);
+  const supabase = createClient();
 
   useEffect(() => {
     // 1. Carrega do cache local imediatamente para o usuário não ver tela em branco
@@ -37,19 +41,36 @@ export default function VisualizarOrcamentoPage() {
         if (data) {
           setOrcamento(data);
         } else {
-          // Só alerta e redireciona se realmente não existir em nenhuma das fontes
           toast('Orçamento não encontrado.', 'error');
           router.push('/orcamentos');
         }
       }
     });
-  }, [params.id, getOrcamento, router, toast]);
+
+    // Buscar perfil
+    async function fetchProfile() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase.from('users').select('*').eq('id', session.user.id).single();
+        setProfile(data);
+      }
+    }
+    fetchProfile();
+  }, [params.id, getOrcamento, router, toast, supabase]);
+
+  useEffect(() => {
+    if (orcamento) {
+      gerarPDFDataURL(orcamento, orcamento.clienteNome).then(url => {
+        setPdfDataUrl(url);
+      });
+    }
+  }, [orcamento]);
 
   if (!orcamento) return null;
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     try {
-      gerarPDFOrcamento(orcamento, orcamento.clienteNome);
+      await downloadPDFOrcamento(orcamento, orcamento.clienteNome);
       toast('PDF gerado com sucesso!', 'success');
     } catch (error) {
       console.error(error);
@@ -96,6 +117,19 @@ export default function VisualizarOrcamentoPage() {
 
   return (
     <AppLayout>
+      {/* Alerta de perfil incompleto */}
+      {profile && (!profile.company_name || !profile.company_email) && (
+        <div className="bg-amber-500 text-amber-950 px-4 py-3 rounded-xl mb-6 flex items-center justify-between shadow-sm animate-fade-in border border-amber-600/20">
+          <div className="flex items-center gap-3">
+            <MdInfoOutline className="text-xl" />
+            <span className="text-sm font-semibold">Os dados da sua empresa (Nome e E-mail) estão incompletos.</span>
+          </div>
+          <Link href="/settings/profile" className="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors">
+            Completar Cadastro
+          </Link>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -130,86 +164,19 @@ export default function VisualizarOrcamentoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         
         {/* Left Side: Proposal Doc Mock */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-premium p-8 sm:p-12 relative overflow-hidden">
-          
-          <div className="absolute top-0 left-0 w-1.5 h-full" style={{ backgroundColor: activeColor }}></div>
-
-          <div className="flex justify-between items-start mb-8 pb-8 border-b border-slate-100">
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-1">WS Design</h3>
-              <p className="text-xs text-slate-400 font-bold uppercase">marketing@wsdesign.com.br</p>
+        <div className="bg-slate-200/50 rounded-3xl border border-slate-200 shadow-inner p-2 relative overflow-hidden flex flex-col min-h-[850px]">
+          {pdfDataUrl ? (
+            <iframe 
+              src={`${pdfDataUrl}#toolbar=0&navpanes=0&scrollbar=0`} 
+              className="w-full h-full rounded-2xl flex-1 bg-white" 
+              title="Prévia do Orçamento"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-4 flex-1">
+              <div className="w-10 h-10 border-4 border-slate-300 border-t-primary-500 rounded-full animate-spin"></div>
+              <p className="text-sm font-bold uppercase tracking-wider">Gerando visualização...</p>
             </div>
-            <div className="text-right">
-              <p className="text-lg font-extrabold text-slate-700">{orcamento.numero}</p>
-              <p className="text-xs text-slate-400">Emissão: {new Date(orcamento.createdAt).toLocaleDateString('pt-BR')}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dados do Cliente</h4>
-              <p className="text-sm font-bold text-slate-800">{orcamento.clienteNome}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{orcamento.clienteEmail}</p>
-              <p className="text-xs text-slate-500">{orcamento.clienteTelefone}</p>
-              <p className="text-xs text-slate-500 mt-1">{orcamento.clienteEndereco}</p>
-            </div>
-            <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Validade</h4>
-              <p className="text-xs text-slate-600 font-semibold">
-                Validade: {orcamento.validade ? new Date(orcamento.validade).toLocaleDateString('pt-BR') : 'Não informada'}
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[500px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Item</th>
-                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Qtd.</th>
-                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Unitário</th>
-                  <th className="py-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {orcamento.itens?.map((item, idx) => (
-                  <tr key={idx}>
-                    <td className="py-4">
-                      <p className="text-sm font-bold text-slate-800">{item.nome}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{item.unidade}</p>
-                    </td>
-                    <td className="py-4 text-sm text-slate-600 text-center">{item.quantidade}</td>
-                    <td className="py-4 text-sm text-slate-600 text-right">R$ {Number(item.precoUnitario).toFixed(2).replace('.', ',')}</td>
-                    <td className="py-4 text-sm font-bold text-slate-800 text-right">R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mt-8 pt-8 border-t border-slate-100">
-            <div className="flex-1">
-              {orcamento.observacoes && (
-                <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-100/60 text-xs text-amber-700 leading-relaxed">
-                  <span className="font-bold block mb-1">Observações</span>
-                  {orcamento.observacoes}
-                </div>
-              )}
-            </div>
-            <div className="w-full sm:w-64 p-4 rounded-xl bg-slate-50 space-y-2">
-              <div className="flex justify-between text-xs text-slate-500">
-                <span>Subtotal</span><span>R$ {Number(orcamento.subtotal || 0).toFixed(2).replace('.', ',')}</span>
-              </div>
-              {Number(orcamento.desconto || 0) > 0 && (
-                <div className="flex justify-between text-xs font-bold text-red-500">
-                  <span>Desconto</span><span>- R$ {Number(orcamento.desconto).toFixed(2).replace('.', ',')}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-base font-extrabold text-slate-800 pt-2 border-t border-slate-200">
-                <span>Total</span><span style={{ color: activeColor }}>R$ {Number(orcamento.total || 0).toFixed(2).replace('.', ',')}</span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Right Side: Shared Tools, Revisions & Tracking */}

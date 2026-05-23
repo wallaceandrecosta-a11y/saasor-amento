@@ -136,11 +136,14 @@ export default function PublicProposalPage() {
   const validade = orcamento.validade || dataDetails.validade;
   const observacoes = orcamento.observacoes || dataDetails.observacoes;
   
-  // Custom Branding (Personalização PRO)
-  const isPremiumUser = orcamento.remove_watermark !== false; // Se a tabela possui esses campos
-  const brandColor = orcamento.brand_color || '#2563eb';
-  const brandLogoUrl = orcamento.brand_logo_url || null;
-  const removeWatermark = orcamento.remove_watermark || false;
+  const users = orcamento.users || {};
+  const companyName = users.company_name || 'Sua Empresa';
+  const companyCnpj = users.company_cnpj ? `CNPJ: ${users.company_cnpj}` : '';
+  const companyEmail = users.company_email || 'contato@suaempresa.com.br';
+  const isPremiumUser = users.remove_watermark !== undefined ? users.remove_watermark : (orcamento.remove_watermark !== false); 
+  const brandColor = users.brand_color || orcamento.brand_color || '#2563eb';
+  const brandLogoUrl = users.brand_logo_url || orcamento.brand_logo_url || null;
+  const removeWatermark = users.remove_watermark !== undefined ? users.remove_watermark : (orcamento.remove_watermark || false);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-24">
@@ -170,7 +173,7 @@ export default function PublicProposalPage() {
               </div>
             )}
             <div>
-              <h2 className="text-sm font-bold text-slate-800 tracking-tight">ORVEN</h2>
+              <h2 className="text-sm font-bold text-slate-800 tracking-tight">{companyName}</h2>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Proposta de Serviço</p>
             </div>
           </div>
@@ -215,9 +218,9 @@ export default function PublicProposalPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Emitente</h3>
-              <p className="text-sm font-bold text-slate-800">ORVEN Tecnologia</p>
-              <p className="text-xs text-slate-500 mt-1">CNPJ: 12.345.678/0001-90</p>
-              <p className="text-xs text-slate-500">contato@orven.com.br</p>
+              <p className="text-sm font-bold text-slate-800">{companyName}</p>
+              {companyCnpj && <p className="text-xs text-slate-500 mt-1">{companyCnpj}</p>}
+              <p className="text-xs text-slate-500">{companyEmail}</p>
             </div>
 
             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">

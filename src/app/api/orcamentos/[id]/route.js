@@ -18,10 +18,10 @@ export async function GET(req, { params }) {
     const { id } = params;
     const supabase = getAdminClient();
 
-    // 1. Busca o orçamento no banco
+    // 1. Busca o orçamento no banco junto com os dados do emissor (users)
     const { data: orcamento, error } = await supabase
       .from('budgets')
-      .select('*')
+      .select('*, users(company_name, company_cnpj, company_email, brand_logo_url, brand_color, remove_watermark)')
       .eq('id', id)
       .single();
 

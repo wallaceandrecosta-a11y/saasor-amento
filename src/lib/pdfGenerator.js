@@ -58,10 +58,21 @@ export async function gerarPDFOrcamento(orcamento, clienteNome) {
 
   if (isFreePlan) {
     renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable);
-    return;
+  } else {
+    renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
   }
 
-  renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
+  return doc;
+}
+
+export async function gerarPDFDataURL(orcamento, clienteNome) {
+  const doc = await gerarPDFOrcamento(orcamento, clienteNome);
+  return doc.output('datauristring');
+}
+
+export async function downloadPDFOrcamento(orcamento, clienteNome) {
+  const doc = await gerarPDFOrcamento(orcamento, clienteNome);
+  doc.save(`Orcamento_${orcamento.numero || '0000'}.pdf`);
 }
 
 // -----------------------------------------------------------------------------
@@ -198,8 +209,6 @@ function renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, auto
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(10, 77, 255);
   doc.text('ORVEN', pageW - 14, pageH - 10, { align: 'right' });
-
-  doc.save(`Orcamento_${orcamento.numero}.pdf`);
 }
 
 // -----------------------------------------------------------------------------
@@ -643,6 +652,4 @@ function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, a
     ? (userProfile.company_name || EMPRESA.nome)
     : 'Emitido por ORVEN';
   doc.text(rodapeNome, pageW - marginR, pageH - 7, { align: 'right' });
-
-  doc.save(`Orcamento_Premium_${orcamento.numero}.pdf`);
 }
