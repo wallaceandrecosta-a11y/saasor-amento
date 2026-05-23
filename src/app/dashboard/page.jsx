@@ -60,7 +60,7 @@ export default function DashboardPage() {
         <UsageBanner />
         
         {/* Top Banner */}
-        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-[#071A3D] via-[#0B1533] to-[#050816] border border-blue-900/25 shadow-2xl p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-in group">
+        <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-[#071A3D] via-[#0B1533] to-[#050816] border border-blue-900/25 shadow-2xl p-6 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-in group">
           <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-25 pointer-events-none overflow-hidden select-none">
             <svg className="w-full h-full object-cover" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M50 220 L250 -20 M120 220 L320 -20 M190 220 L390 -20" stroke="url(#line-grad)" strokeWidth="1" />
@@ -106,7 +106,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Corporate CTA Card */}
-          <div className="lg:col-span-2 relative overflow-hidden rounded-[24px] bg-[#071A3D]/30 border border-blue-900/20 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between group hover:border-primary-500/35 hover:shadow-glow transition-all duration-500">
+          <div className="lg:col-span-2 relative overflow-hidden rounded-[24px] bg-[#071A3D]/30 border border-blue-900/20 backdrop-blur-xl shadow-2xl p-6 md:p-8 flex flex-col justify-between group hover:border-primary-500/35 hover:shadow-glow transition-all duration-500">
             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-primary-600/5 rounded-full blur-3xl group-hover:bg-primary-600/10 transition-all duration-500"></div>
             
             <div className="space-y-3">
@@ -124,7 +124,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Plan Usage Card — dados reais */}
-          <div className="card p-8 flex flex-col justify-between">
+          <div className="card p-6 md:p-8 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-[10px] font-extrabold text-[#8B95A7] uppercase tracking-widest">Assinatura Ativa</h3>

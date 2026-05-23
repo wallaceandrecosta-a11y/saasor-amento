@@ -24,7 +24,7 @@ const bottomNavItems = [
   { label: 'Configurações',href: '/settings/profile',  icon: <MdPerson /> },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -55,19 +55,36 @@ export default function Sidebar() {
     : 'bg-primary-500/10 border-primary-500/25 text-primary-400';
 
   return (
-    <aside className="w-64 bg-[#03050F] border-r border-blue-900/10 h-screen fixed left-0 top-0 flex flex-col z-40">
-      {/* Brand Logo Header */}
-      <div className="px-7 py-7 flex items-center gap-3">
-        <div className="w-8 h-8 flex items-center justify-center bg-[#071A3D]/40 border border-blue-900/20 rounded-lg shadow-glow hover:scale-105 transition-all duration-300 p-1">
-          <img src="/icon.svg" alt="Orven Logo" className="w-full h-full object-contain" />
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+          onClick={onClose}
+        />
+      )}
+
+      <aside className={`w-64 bg-[#03050F] border-r border-blue-900/10 h-screen fixed left-0 top-0 flex flex-col z-50 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        {/* Brand Logo Header */}
+        <div className="px-7 py-7 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 flex items-center justify-center bg-[#071A3D]/40 border border-blue-900/20 rounded-lg shadow-glow hover:scale-105 transition-all duration-300 p-1">
+              <img src="/icon.svg" alt="Orven Logo" className="w-full h-full object-contain" />
+            </div>
+            <div>
+              <h2 className="text-xs font-black text-white tracking-widest leading-none uppercase">ORVEN</h2>
+              <p className="text-[9px] text-[#8B95A7] font-bold uppercase tracking-widest mt-1">
+                {planLoading ? '...' : `${plan.name} Cockpit`}
+              </p>
+            </div>
+          </div>
+          {/* Close button on mobile */}
+          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <div>
-          <h2 className="text-xs font-black text-white tracking-widest leading-none uppercase">ORVEN</h2>
-          <p className="text-[9px] text-[#8B95A7] font-bold uppercase tracking-widest mt-1">
-            {planLoading ? '...' : `${plan.name} Cockpit`}
-          </p>
-        </div>
-      </div>
 
       {/* Quick Action Button */}
       <div className="px-5 mb-6">
@@ -192,5 +209,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

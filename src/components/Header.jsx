@@ -1,11 +1,14 @@
 'use client';
-import { MdSearch, MdNotificationsNone } from 'react-icons/md';
+import { MdSearch, MdNotificationsNone, MdMenu } from 'react-icons/md';
 
-export default function Header() {
+export default function Header({ onOpenMenu }) {
   return (
-    <header className="h-16 border-b border-blue-900/10 bg-[#050816]/80 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-30">
-      <div className="flex-1 max-w-md">
-        <div className="relative group">
+    <header className="h-16 border-b border-blue-900/10 bg-[#050816]/80 backdrop-blur-xl flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
+        <button onClick={onOpenMenu} className="lg:hidden text-[#8B95A7] hover:text-white transition-colors cursor-pointer p-1">
+          <MdMenu className="text-2xl" />
+        </button>
+        <div className="relative group w-full">
           <MdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8B95A7] text-lg group-focus-within:text-primary-500 transition-colors" />
           <input
             type="text"

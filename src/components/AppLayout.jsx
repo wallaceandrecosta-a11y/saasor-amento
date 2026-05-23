@@ -9,6 +9,7 @@ export default function AppLayout({ children }) {
   const { user } = useAuthStore();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -23,8 +24,8 @@ export default function AppLayout({ children }) {
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-[#0B0D12] flex opacity-0">
-        <div className="flex-1 flex flex-col ml-64">
-          <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
+        <div className="flex-1 flex flex-col lg:ml-64 w-full">
+          <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
             {children}
           </main>
         </div>
@@ -36,10 +37,10 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-[#0B0D12] flex">
-      <Sidebar />
-      <div className="flex-1 flex flex-col ml-64 min-h-screen transition-all duration-300">
-        <Header />
-        <main className="flex-1 p-8 max-w-[1400px] w-full mx-auto animate-fade-in">
+      <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      <div className="flex-1 flex flex-col lg:ml-64 min-h-screen transition-all duration-300 w-full overflow-x-hidden">
+        <Header onOpenMenu={() => setIsMobileMenuOpen(true)} />
+        <main className="flex-1 p-4 lg:p-8 max-w-[1400px] w-full mx-auto animate-fade-in">
           {children}
         </main>
       </div>
