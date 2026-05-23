@@ -199,7 +199,7 @@ export default function PublicProposalPage() {
         `}} />
 
         {/* Invoice Page Container */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-premium p-8 sm:p-12 relative overflow-hidden">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-premium p-5 sm:p-12 relative overflow-hidden">
           
           {/* Decorative side color band */}
           <div className="absolute top-0 left-0 w-2 h-full brand-accent-bg"></div>
@@ -222,7 +222,7 @@ export default function PublicProposalPage() {
           </div>
 
           {/* Customer / Provider Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-10">
             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Emitente</h3>
               <p className="text-sm font-bold text-slate-800">{companyName}</p>
@@ -304,14 +304,14 @@ export default function PublicProposalPage() {
 
         {/* Client Interactive Action Bar */}
         {orcamento.status === 'pendente' && (
-          <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-soft">
-            <button onClick={() => setModalApprove(true)} className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all duration-200 text-sm flex items-center gap-2">
+          <div className="mt-8 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4 bg-white border border-slate-200 p-5 sm:p-6 rounded-2xl shadow-soft">
+            <button onClick={() => setModalApprove(true)} className="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 hover:-translate-y-0.5 transition-all duration-200 text-sm flex items-center justify-center gap-2">
               <MdCheck className="text-lg" /> Aprovar Proposta
             </button>
-            <button onClick={() => setModalChanges(true)} className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-200 text-sm flex items-center gap-2">
+            <button onClick={() => setModalChanges(true)} className="w-full sm:w-auto px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-200 text-sm flex items-center justify-center gap-2">
               Solicitar Ajustes
             </button>
-            <button onClick={() => setModalReject(true)} className="px-6 py-3.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-all duration-200 text-sm flex items-center gap-2">
+            <button onClick={() => setModalReject(true)} className="w-full sm:w-auto px-6 py-3.5 bg-white border border-red-200 hover:bg-red-50 text-red-600 font-bold rounded-xl transition-all duration-200 text-sm flex items-center justify-center gap-2">
               Recusar Orçamento
             </button>
           </div>

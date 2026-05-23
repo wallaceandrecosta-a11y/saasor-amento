@@ -164,7 +164,7 @@ export default function VisualizarOrcamentoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
         
         {/* Left Side: Proposal Doc Mock */}
-        <div className="bg-slate-200/50 rounded-3xl border border-slate-200 shadow-inner p-2 relative overflow-hidden flex flex-col min-h-[850px]">
+        <div className="bg-slate-200/50 rounded-3xl border border-slate-200 shadow-inner p-2 relative overflow-hidden flex flex-col min-h-[60vh] lg:min-h-[850px]">
           {pdfDataUrl ? (
             <iframe 
               src={`${pdfDataUrl}#toolbar=0&navpanes=0&scrollbar=0`} 
