@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+// Cliente Admin com Service Role para poder atualizar os orçamentos ignorando o RLS
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY, // Requer essa variável de ambiente!
+    { auth: { persistSession: false } }
+  );
+}
 
 // GET /api/orcamentos/[id]
 // Carrega o orçamento publicamente (sem autenticação) e registra o tracking de visualização
 export async function GET(req, { params }) {
   try {
     const { id } = params;
-    const supabase = createClient();
+    const supabase = getAdminClient();
 
     // 1. Busca o orçamento no banco
     const { data: orcamento, error } = await supabase
@@ -72,7 +82,7 @@ export async function POST(req, { params }) {
     const body = await req.json();
     const { action, feedback } = body; // action: 'approve' | 'reject' | 'request_changes'
     
-    const supabase = createClient();
+    const supabase = getAdminClient();
 
     // 1. Busca o orçamento atual
     const { data: orcamento, error: fetchError } = await supabase
