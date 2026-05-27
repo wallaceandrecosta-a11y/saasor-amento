@@ -6,7 +6,7 @@ const EMPRESA = {
   cnpj: '',
   endereco: '',
   telefone: '',
-  email: 'marketing@wsdesign.com.br',
+  email: 'contato@suaempresa.com.br',
   site: '',
 };
 
@@ -57,9 +57,9 @@ export async function gerarPDFOrcamento(orcamento, clienteNome) {
   const pageH = doc.internal.pageSize.getHeight();
 
   if (isFreePlan) {
-    renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable);
+    await renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable);
   } else {
-    renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
+    await renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
   }
 
   return doc;
@@ -214,7 +214,7 @@ function renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, auto
 // -----------------------------------------------------------------------------
 // 2. MODELO PREMIUM
 // -----------------------------------------------------------------------------
-function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile) {
+async function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile) {
   const templateId = orcamento.template || 'corporate';
 
   const NICHOS = {
@@ -443,7 +443,29 @@ function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, a
       let format = 'PNG';
       if (userProfile.brand_logo_url.startsWith('data:image/jpeg') ||
           userProfile.brand_logo_url.startsWith('data:image/jpg')) format = 'JPEG';
-      doc.addImage(userProfile.brand_logo_url, format, marginL, y - 4, 32, 13, undefined, 'FAST');
+      
+      // Criar imagem para calcular aspect ratio e evitar que estique
+      const img = new Image();
+      img.src = userProfile.brand_logo_url;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+      
+      let logoW = 32;
+      let logoH = 13;
+      
+      if (img.width && img.height) {
+        const imgRatio = img.width / img.height;
+        const boxRatio = logoW / logoH;
+        if (imgRatio > boxRatio) {
+          logoH = logoW / imgRatio;
+        } else {
+          logoW = logoH * imgRatio;
+        }
+      }
+
+      doc.addImage(userProfile.brand_logo_url, format, marginL, y - 4, logoW, logoH, undefined, 'FAST');
       logoDrawn = true;
     } catch (e) {
       console.error('Erro ao renderizar logotipo:', e);
@@ -461,16 +483,17 @@ function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, a
   doc.setFontSize(8);
   doc.setTextColor(...estilo.textMuted);
   const cnpjLine = userProfile?.company_cnpj
-    ? `CNPJ: ${userProfile.company_cnpj}`
-    : (EMPRESA.cnpj ? `CNPJ: ${EMPRESA.cnpj}` : '');
-  const subLine = cnpjLine ? `${cnpjLine}  ·  ${EMPRESA.email}` : EMPRESA.email;
+    ? `CNPJ/CPF: ${userProfile.company_cnpj}`
+    : (EMPRESA.cnpj ? `CNPJ/CPF: ${EMPRESA.cnpj}` : '');
+  const contactEmail = userProfile?.company_email || EMPRESA.email;
+  const subLine = cnpjLine ? `${cnpjLine}  ·  ${contactEmail}` : contactEmail;
   doc.text(subLine, marginL, y + (logoDrawn ? 10 : 5.5));
 
-  // Título e número (direita)
+  // Titulo e numero (direita)
   doc.setFont(f, 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(...(isDark ? [255, 255, 255] : estilo.primary));
-  doc.text(estilo.title, pageW - marginR, y, { align: 'right' });
+  doc.text('PROPOSTA COMERCIAL', pageW - marginR, y, { align: 'right' });
 
   doc.setFont(f, 'normal');
   doc.setFontSize(8);

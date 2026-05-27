@@ -145,7 +145,7 @@ export default function PublicProposalPage() {
   
   const users = orcamento.users || {};
   const companyName = users.company_name || 'Sua Empresa';
-  const companyCnpj = users.company_cnpj ? `CNPJ: ${users.company_cnpj}` : '';
+  const companyCnpj = users.company_cnpj ? `CNPJ/CPF: ${users.company_cnpj}` : '';
   const companyEmail = users.company_email || 'contato@suaempresa.com.br';
   const isPremiumUser = users.remove_watermark !== undefined ? users.remove_watermark : (orcamento.remove_watermark !== false); 
   const brandColor = users.brand_color || orcamento.brand_color || '#2563eb';
