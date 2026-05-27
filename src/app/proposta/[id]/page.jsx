@@ -153,7 +153,7 @@ export default function PublicProposalPage() {
   const removeWatermark = users.remove_watermark !== undefined ? users.remove_watermark : (orcamento.remove_watermark || false);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-24">
+    <div className="min-h-screen bg-slate-50 pb-24">
       {/* Top Banner (Status) */}
       {orcamento.status === 'aprovado' && (
         <div className="bg-emerald-500 text-white py-3.5 px-4 text-center font-semibold text-sm shadow-sm flex items-center justify-center gap-2 animate-fade-in">
