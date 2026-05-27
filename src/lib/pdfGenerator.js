@@ -57,7 +57,7 @@ export async function gerarPDFOrcamento(orcamento, clienteNome) {
   const pageH = doc.internal.pageSize.getHeight();
 
   if (isFreePlan) {
-    await renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable);
+    await renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
   } else {
     await renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile);
   }
@@ -78,7 +78,7 @@ export async function downloadPDFOrcamento(orcamento, clienteNome) {
 // -----------------------------------------------------------------------------
 // 1. MODELO GRATUITO
 // -----------------------------------------------------------------------------
-function renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable) {
+function renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, autoTable, userProfile) {
   doc.setFillColor(255, 255, 255);
   doc.rect(0, 0, pageW, pageH, 'F');
 
@@ -111,8 +111,10 @@ function renderSinglePageFreePDF(doc, orcamento, clienteNome, pageW, pageH, auto
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(80, 90, 105);
-  doc.text(EMPRESA.nome, 14, y + 5.5);
-  doc.text(EMPRESA.cnpj ? `CNPJ: ${EMPRESA.cnpj}` : `E-mail: ${EMPRESA.email}`, 14, y + 10.5);
+  doc.text(userProfile?.company_name || EMPRESA.nome, 14, y + 5.5);
+  const freeCnpj = userProfile?.company_cnpj || EMPRESA.cnpj;
+  const freeEmail = userProfile?.company_email || EMPRESA.email;
+  doc.text(freeCnpj ? `CNPJ/CPF: ${freeCnpj}` : `E-mail: ${freeEmail}`, 14, y + 10.5);
 
   doc.setTextColor(11, 13, 18);
   doc.setFont('helvetica', 'bold');
@@ -438,6 +440,7 @@ async function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pa
 
   // ── CABEÇALHO ──────────────────────────────────────────────────────────────
   let logoDrawn = false;
+  let actualLogoH = 0;
   if (userProfile?.brand_logo_url) {
     try {
       let format = 'PNG';
@@ -467,6 +470,7 @@ async function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pa
 
       doc.addImage(userProfile.brand_logo_url, format, marginL, y - 4, logoW, logoH, undefined, 'FAST');
       logoDrawn = true;
+      actualLogoH = logoH;
     } catch (e) {
       console.error('Erro ao renderizar logotipo:', e);
     }
@@ -487,7 +491,8 @@ async function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pa
     : (EMPRESA.cnpj ? `CNPJ/CPF: ${EMPRESA.cnpj}` : '');
   const contactEmail = userProfile?.company_email || EMPRESA.email;
   const subLine = cnpjLine ? `${cnpjLine}  ·  ${contactEmail}` : contactEmail;
-  doc.text(subLine, marginL, y + (logoDrawn ? 10 : 5.5));
+  const subLineY = logoDrawn ? (y - 4 + actualLogoH + 4.5) : (y + 5.5);
+  doc.text(subLine, marginL, subLineY);
 
   // Titulo e numero (direita)
   doc.setFont(f, 'bold');
@@ -501,7 +506,8 @@ async function renderSinglePagePremiumPDF(doc, orcamento, clienteNome, pageW, pa
   doc.text(`Proposta: ${orcamento.numero}`, pageW - marginR, y + 5.5, { align: 'right' });
   doc.text(`Emissão: ${new Date(orcamento.createdAt).toLocaleDateString('pt-BR')}`, pageW - marginR, y + 10.5, { align: 'right' });
 
-  y += 18;
+  // Espaçamento dinâmico baseado na altura do logotipo ou do texto
+  y = Math.max(subLineY, y + 10.5) + 8;
 
   // ── DIVISOR ────────────────────────────────────────────────────────────────
   doc.setDrawColor(...estilo.divider);
