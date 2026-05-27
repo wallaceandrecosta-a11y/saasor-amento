@@ -101,7 +101,9 @@ export default function OrcamentosPage() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+          <div className="w-full">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="border-b border-slate-800/80 bg-slate-900/40">
@@ -168,6 +170,56 @@ export default function OrcamentosPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-800/40">
+              {paginatedData.map((o) => (
+                <div key={o.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/20 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 block mb-0.5">#{o.numero}</span>
+                      <h4 className="font-bold text-slate-200 text-sm line-clamp-1">{o.clienteNome}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">{o.itens?.length ?? 0} item(s) • {new Date(o.createdAt).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <span className="text-sm font-bold text-white shrink-0">
+                      R$ {Number(o.total).toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-1">
+                    <select
+                      className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-1 outline-none cursor-pointer border border-transparent hover:border-slate-700 transition-all appearance-none bg-[#11131a]
+                        ${o.status === 'aprovado' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 
+                          o.status === 'pendente' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 
+                          o.status === 'recusado' ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-slate-850 border-slate-700 text-slate-400'}`}
+                      value={o.status}
+                      onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                      style={{ paddingRight: '1.2rem', backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: 'right 0.2rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1em 1em' }}
+                    >
+                      {['pendente', 'aprovado', 'recusado', 'cancelado'].map((s) => (
+                        <option key={s} value={s} className="bg-[#11131a] text-slate-200">{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                      ))}
+                    </select>
+
+                    <div className="flex gap-1 shrink-0">
+                      <Link href={`/orcamentos/${o.id}`} className="p-1.5 text-slate-450 hover:text-primary-400 hover:bg-slate-800 rounded-md transition-colors">
+                        <MdVisibility className="text-sm" />
+                      </Link>
+                      <Link href={`/orcamentos/novo?clone=${o.id}`} className="p-1.5 text-slate-450 hover:text-white hover:bg-slate-800 rounded-md transition-colors">
+                        <MdContentCopy className="text-sm" />
+                      </Link>
+                      <button 
+                        className="p-1.5 text-slate-450 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                        onClick={() => setConfirmDel(o)}
+                      >
+                        <MdDelete className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           )}
           
           {totalPages > 1 && (

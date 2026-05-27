@@ -98,8 +98,10 @@ export default function ServicosPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="w-full">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-800/80 bg-slate-900/40">
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Nome</th>
@@ -143,7 +145,44 @@ export default function ServicosPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-800/40">
+              {filtered.map((s) => (
+                <div key={s.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/20 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="pr-2">
+                      <h4 className="font-bold text-slate-200 text-sm">{s.nome}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{s.descricao || 'Sem descrição'}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button 
+                        className="p-1.5 text-slate-450 hover:text-primary-400 hover:bg-slate-800 rounded-md transition-colors"
+                        onClick={() => openEdit(s)}
+                      >
+                        <MdEdit className="text-sm" />
+                      </button>
+                      <button 
+                        className="p-1.5 text-slate-450 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                        onClick={() => setConfirmDel(s)}
+                      >
+                        <MdDelete className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-primary-400">
+                      R$ {Number(s.preco).toFixed(2).replace('.', ',')}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 border border-slate-700 text-slate-300 capitalize">
+                      {s.unidade}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

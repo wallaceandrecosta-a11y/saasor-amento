@@ -117,8 +117,10 @@ export default function ClientesPage() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="w-full">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-800/80 bg-slate-900/40">
                   <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Nome</th>
@@ -160,7 +162,40 @@ export default function ClientesPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-800/40">
+              {filtered.map((c) => (
+                <div key={c.id} className="p-4 flex flex-col gap-3 hover:bg-slate-800/20 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-200 text-sm">{c.nome}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">{c.email || c.telefone || 'Sem contato'}</p>
+                    </div>
+                    <div className="flex gap-1">
+                      <button 
+                        className="p-1.5 text-slate-450 hover:text-primary-400 hover:bg-slate-800 rounded-md transition-colors"
+                        onClick={() => openEdit(c)}
+                      >
+                        <MdEdit className="text-sm" />
+                      </button>
+                      <button 
+                        className="p-1.5 text-slate-450 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                        onClick={() => setConfirmDel(c)}
+                      >
+                        <MdDelete className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] text-slate-500 font-mono">
+                    <span className="bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700/50">{c.cpfCnpj || 'Sem Doc'}</span>
+                    <span>{c.createdAt ? new Date(c.createdAt).toLocaleDateString('pt-BR') : ''}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

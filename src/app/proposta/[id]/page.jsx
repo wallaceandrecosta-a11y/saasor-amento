@@ -243,30 +243,52 @@ export default function PublicProposalPage() {
           </div>
 
           {/* Items Table */}
-          <div className="overflow-x-auto -mx-8 sm:mx-0">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Descrição dos Serviços / Produtos</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Quantidade</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Preço Unitário</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {itens.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-slate-800">{item.nome}</p>
-                      <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-0.5">{item.unidade}</p>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-600 text-center">{item.quantidade}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-600 text-right">R$ {Number(item.precoUnitario).toFixed(2).replace('.', ',')}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-800 text-right">R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</td>
+          <div className="w-full">
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto -mx-8 sm:mx-0">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Descrição dos Serviços / Produtos</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Quantidade</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Preço Unitário</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Subtotal</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {itens.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-slate-800">{item.nome}</p>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mt-0.5">{item.unidade}</p>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600 text-center">{item.quantidade}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-600 text-right">R$ {Number(item.precoUnitario).toFixed(2).replace('.', ',')}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-slate-800 text-right">R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="sm:hidden flex flex-col divide-y divide-slate-100 border-y border-slate-100 mt-4 mb-4">
+              {itens.map((item, idx) => (
+                <div key={idx} className="py-4 flex flex-col gap-2">
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{item.nome}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{item.unidade}</p>
+                    </div>
+                    <span className="text-sm font-bold text-slate-800 whitespace-nowrap">R$ {(item.precoUnitario * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-slate-500 font-medium bg-slate-50 p-2 rounded-lg border border-slate-100">
+                    <span>{item.quantidade}x</span>
+                    <span>R$ {Number(item.precoUnitario).toFixed(2).replace('.', ',')} cada</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Proposal Summary */}
@@ -334,8 +356,8 @@ export default function PublicProposalPage() {
 
       {/* MODAL 1: APPROVAL */}
       {modalApprove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setModalApprove(false)}>
-          <div className="bg-white rounded-2xl shadow-premium max-w-md w-full p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setModalApprove(false)}>
+          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mb-4">
               <MdCheck />
             </div>
@@ -363,10 +385,10 @@ export default function PublicProposalPage() {
         </div>
       )}
 
-      {/* MODAL 2: ADJUSTMENTS */}
+      {/* MODAL 2: REQUEST CHANGES */}
       {modalChanges && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setModalChanges(false)}>
-          <div className="bg-white rounded-2xl shadow-premium max-w-md w-full p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setModalChanges(false)}>
+          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-2xl mb-4">
               <MdRefresh />
             </div>
@@ -388,10 +410,10 @@ export default function PublicProposalPage() {
         </div>
       )}
 
-      {/* MODAL 3: REJECTION */}
+      {/* MODAL 3: REJECT */}
       {modalReject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setModalReject(false)}>
-          <div className="bg-white rounded-2xl shadow-premium max-w-md w-full p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setModalReject(false)}>
+          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 animate-slide-up max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mb-4">
               <MdClose />
             </div>
