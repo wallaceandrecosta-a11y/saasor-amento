@@ -118,7 +118,7 @@ export default function ProfileBrandingPage() {
       toast('Perfil e preferências salvos com sucesso!', 'success');
     } catch (err) {
       console.error(err);
-      toast('Erro ao salvar alterações.', 'error');
+      toast(`Erro ao salvar: ${err.message || 'Falha desconhecida'}`, 'error');
     } finally {
       setSaving(false);
     }

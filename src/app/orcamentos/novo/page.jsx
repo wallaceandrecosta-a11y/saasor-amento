@@ -478,20 +478,26 @@ function NovoOrcamentoContent() {
   };
 
   const executeSave = async () => {
-    const orcamentoData = {
-      numero: proposalNumber,
-      clienteId,
-      clienteNome: selectedCliente.nome,
-      clienteEmail: selectedCliente.email,
-      clienteTelefone: selectedCliente.telefone,
-      clienteEndereco: selectedCliente.endereco,
-      itens, subtotal, desconto: Number(desconto) || 0, total, validade, observacoes, template, status: 'pendente'
-    };
+    try {
+      const orcamentoData = {
+        numero: proposalNumber,
+        clienteId,
+        clienteNome: selectedCliente.nome,
+        clienteEmail: selectedCliente.email,
+        clienteTelefone: selectedCliente.telefone,
+        clienteEndereco: selectedCliente.endereco,
+        itens, subtotal, desconto: Number(desconto) || 0, total, validade, observacoes, template, status: 'pendente'
+      };
 
-    const novo = await addOrcamento(orcamentoData);
-    setGenerating(false);
-    toast('Orçamento gerado com sucesso!', 'success');
-    router.push(`/orcamentos/${novo.id}`);
+      const novo = await addOrcamento(orcamentoData);
+      setGenerating(false);
+      toast('Orçamento gerado com sucesso!', 'success');
+      router.push(`/orcamentos/${novo.id}`);
+    } catch (err) {
+      console.error(err);
+      setGenerating(false);
+      toast(`Erro ao gerar orçamento: ${err.message}`, 'error');
+    }
   };
 
   return (
