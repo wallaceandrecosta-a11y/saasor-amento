@@ -12,7 +12,7 @@ export const useAuthStore = create(
     (set) => ({
       user: null,
       login: (email, password) => {
-        if (email === 'admin@wssolutions.com.br' && password === 'admin123') {
+        if (email === 'admin@orven.com.br' && password === 'admin123') {
           set({ user: { email, name: 'Administrador' } });
           return true;
         }

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   MdDashboard, MdPeople, MdBuild, MdDescription,
   MdAddCircle, MdLogout, MdSettings, MdPerson, MdOutlineSpaceDashboard,
-  MdRocketLaunch, MdStar
+  MdRocketLaunch, MdStar, MdSecurity
 } from 'react-icons/md';
 import { FiLayout } from 'react-icons/fi';
 import { createClient } from '@/lib/supabase/client';
@@ -203,10 +203,16 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#8B95A7] hover:text-red-400 transition-all rounded-lg hover:bg-red-500/5 cursor-pointer"
+          className="flex items-center gap-2 w-full px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#8B95A7] hover:text-red-400 transition-all rounded-lg hover:bg-red-500/5 cursor-pointer mb-2"
         >
           <MdLogout className="text-sm" /> Sair
         </button>
+
+        {/* Security Indicator */}
+        <div className="flex items-center justify-center gap-1.5 pt-3 border-t border-blue-900/10 text-[#8B95A7]">
+          <MdSecurity className="text-[10px] text-emerald-400" />
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-500">Conexão 100% Segura</span>
+        </div>
       </div>
     </aside>
     </>

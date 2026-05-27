@@ -23,6 +23,7 @@ export default function ProfileBrandingPage() {
     fullName: '',
     companyName: '',
     companyCnpj: '',
+    companyEmail: '',
     brandColor: '#0A4DFF',
     brandLogoUrl: '',
     removeWatermark: false,
@@ -55,6 +56,7 @@ export default function ProfileBrandingPage() {
           fullName: profile.full_name || '',
           companyName: profile.company_name || '',
           companyCnpj: profile.company_cnpj || '',
+          companyEmail: profile.company_email || '',
           brandColor: profile.brand_color || '#0A4DFF',
           brandLogoUrl: profile.brand_logo_url || '',
           removeWatermark: profile.remove_watermark || false,
@@ -96,6 +98,7 @@ export default function ProfileBrandingPage() {
         full_name: profileData.fullName,
         company_name: profileData.companyName,
         company_cnpj: profileData.companyCnpj,
+        company_email: profileData.companyEmail,
       };
 
       // Só permite salvar customizações de branding se for PRO/Premium
@@ -203,6 +206,17 @@ export default function ProfileBrandingPage() {
                   value={profileData.companyName}
                   onChange={e => setProfileData({ ...profileData, companyName: e.target.value })}
                   placeholder="Ex: Minha Empresa..." 
+                  className="input-modern" 
+                />
+              </div>
+
+              <div>
+                <label className="label-modern">E-mail da Empresa (Público)</label>
+                <input 
+                  type="email" 
+                  value={profileData.companyEmail}
+                  onChange={e => setProfileData({ ...profileData, companyEmail: e.target.value })}
+                  placeholder="contato@minhaempresa.com" 
                   className="input-modern" 
                 />
               </div>

@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdEmail, MdLock, MdLogin, MdPersonAdd } from 'react-icons/md';
+import { MdEmail, MdLock, MdLogin, MdPersonAdd, MdSecurity } from 'react-icons/md';
 import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('');
@@ -158,15 +159,33 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Trust Badge */}
+        <div className="mt-6 pt-6 border-t border-blue-900/10 flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1.5 text-emerald-400/90 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+            <MdSecurity className="text-sm" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Ambiente 100% Seguro</span>
+          </div>
+          <p className="text-[10px] text-slate-500 font-medium text-center px-4">
+            Seus dados são protegidos com criptografia de ponta a ponta.
+          </p>
+        </div>
+
         {/* Footer Navigation */}
-        <div className="text-center mt-8 pt-6 border-t border-blue-900/10">
+        <div className="text-center mt-6 pt-4 space-y-4">
           <button 
             type="button" 
             onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-            className="text-xs font-bold text-primary-400 hover:text-primary-300 transition-colors cursor-pointer"
+            className="text-xs font-bold text-primary-400 hover:text-primary-300 transition-colors cursor-pointer block w-full"
           >
             {isSignUp ? 'Já possui uma conta? Faça Login' : 'Não possui uma conta? Cadastre-se grátis'}
           </button>
+          
+          <p className="text-[10px] text-slate-500 font-medium px-4">
+            Ao continuar, você concorda com nossos{' '}
+            <Link href="/termos" className="text-slate-400 hover:text-white underline transition-colors">Termos de Uso</Link>
+            {' '}e{' '}
+            <Link href="/privacidade" className="text-slate-400 hover:text-white underline transition-colors">Política de Privacidade</Link>.
+          </p>
         </div>
       </div>
     </div>

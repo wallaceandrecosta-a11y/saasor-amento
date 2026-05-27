@@ -62,7 +62,7 @@ export async function middleware(req) {
   // --- 4. Roteamento Multi-tenant ---
   const MAIN_DOMAINS = [
     'localhost:3000',
-    'wssolutions.com.br',
+    'orven.com.br',
     'ws-orcamentos.vercel.app',
     'orcamen.to'
   ];

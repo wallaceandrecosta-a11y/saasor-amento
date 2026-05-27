@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { MdCheckCircle, MdError, MdDownload, MdSignature, MdCheck, MdClose, MdRefresh } from 'react-icons/md';
+import { MdCheckCircle, MdError, MdDownload, MdSignature, MdCheck, MdClose, MdRefresh, MdSecurity } from 'react-icons/md';
 import { gerarPDFOrcamento } from '@/lib/pdfGenerator';
 
 export default function PublicProposalPage() {
@@ -316,6 +316,17 @@ export default function PublicProposalPage() {
             </button>
           </div>
         )}
+        
+        {/* Security Footer */}
+        <div className="mt-12 flex flex-col items-center justify-center gap-2 animate-fade-in">
+          <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-100/50 px-4 py-2 rounded-full border border-emerald-200">
+            <MdSecurity className="text-base" />
+            <span className="text-xs font-bold uppercase tracking-wider">Ambiente Protegido</span>
+          </div>
+          <p className="text-[11px] text-slate-500 font-medium text-center max-w-sm">
+            Esta proposta foi processada e enviada de forma segura. Todos os dados são protegidos com criptografia de ponta a ponta.
+          </p>
+        </div>
       </div>
 
       {/* MODAL 1: APPROVAL */}
