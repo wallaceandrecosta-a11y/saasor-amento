@@ -5,6 +5,7 @@ import { ToastProvider } from './Toast';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore, useOrcamentosStore } from '@/lib/store';
 import { PlanProvider } from '@/lib/planContext';
+import FeedbackWidget from './FeedbackWidget';
 
 export default function Providers({ children }) {
   useEffect(() => {
@@ -35,11 +36,17 @@ export default function Providers({ children }) {
     };
   }, []);
 
-  return (
     <ToastProvider>
       <PlanProvider>
         {children}
+        <FeedbackWrapper />
       </PlanProvider>
     </ToastProvider>
   );
+}
+
+function FeedbackWrapper() {
+  const { user } = useAuthStore();
+  if (!user) return null;
+  return <FeedbackWidget />;
 }

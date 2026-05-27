@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { MdCheckCircle, MdError, MdDownload, MdSignature, MdCheck, MdClose, MdRefresh, MdSecurity } from 'react-icons/md';
 import { gerarPDFOrcamento } from '@/lib/pdfGenerator';
+import { useToast } from '@/components/Toast';
 
 export default function PublicProposalPage() {
   const params = useParams();
+  const toast = useToast();
   const [orcamento, setOrcamento] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,9 +76,10 @@ export default function PublicProposalPage() {
       setModalChanges(false);
       setFeedbackText('');
       setClientName('');
+      toast('Ação enviada com sucesso!', 'success');
       
     } catch (err) {
-      alert(err.message);
+      toast(`Erro: ${err.message}`, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -103,7 +106,7 @@ export default function PublicProposalPage() {
       gerarPDFOrcamento(pdfData, pdfData.clienteNome);
     } catch (err) {
       console.error(err);
-      alert('Erro ao gerar o PDF.');
+      toast('Erro ao gerar o PDF.', 'error');
     }
   };
 
